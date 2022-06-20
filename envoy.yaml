@@ -1,7 +1,10 @@
 # https://cloudnative.to/envoy/api-v3/config/route/v3/route_components.proto.html#config-route-v3-routeaction-hashpolicy
 # https://stackoverflow.com/questions/69033708/how-to-set-hash-key-value-in-envoy-proxy-for-ring-hash-load-balancing
+# https://www.redhat.com/en/blog/configuring-envoy-auto-discover-pods-kubernetes
+
 admin:
   address:
+    access_log_path: /dev/stdout
     socket_address: { address: 0.0.0.0, port_value: 9901 }
 
 static_resources:
@@ -30,6 +33,8 @@ static_resources:
                         header_name: ":path" # https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.3
           http_filters:
           - name: envoy.filters.http.router
+            typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
   - name: pgw_service
     connect_timeout: 0.25s
@@ -54,3 +59,15 @@ static_resources:
               socket_address:
                 address: 172.16.123.177
                 port_value: 9093
+  
+  layered_runtime:
+  layers:
+    - name: static_layer_0
+      static_layer:
+        envoy:
+          resource_limits:
+            listener:
+              example_listener_name:
+                connection_limit: 10000
+        overload:
+          global_downstream_max_connections: 50000
