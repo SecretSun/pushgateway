@@ -1,0 +1,56 @@
+# https://cloudnative.to/envoy/api-v3/config/route/v3/route_components.proto.html#config-route-v3-routeaction-hashpolicy
+# https://stackoverflow.com/questions/69033708/how-to-set-hash-key-value-in-envoy-proxy-for-ring-hash-load-balancing
+admin:
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 10000 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          route_config:
+            name: envoy_pgw_route
+            virtual_hosts:
+            - name: envoy_pgw_service
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route:
+                  cluster: pgw_service
+                  hash_policy:
+                    - header:
+                        header_name: ":path" # https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.3
+          http_filters:
+          - name: envoy.filters.http.router
+  clusters:
+  - name: pgw_service
+    connect_timeout: 0.25s
+    type: STATIC
+    lb_policy: MAGLEV # https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/44824.pdf
+    load_assignment:
+      cluster_name: pgw_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.16.123.177
+                port_value: 9091
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.16.123.177
+                port_value: 9092
+        - endpoint:
+            address:
+              socket_address:
+                address: 172.16.123.177
+                port_value: 9093
