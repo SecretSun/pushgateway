@@ -637,6 +637,7 @@ storage/diskmetricstore.go: 85 & 107 & 461 & 472
 ```
 
 ## 一致性
+
 Envoy + Headless Service Svc + MAGLEV
 在 K8s 中有一种称为 Headless Service 的特定服务，恰好与 Envoy 的 STRICT_DNS 服务发现模式一起使用非常方便。
 Headless Service 不提供单个 IP 和负载平衡到底层 pod，而是它只有 DNS 配置，它为我们提供 A 记录，其中包含与标签选择器匹配的所有 pod 的 pod 的 IP 地址。
