@@ -464,7 +464,7 @@ func (dms *DiskMetricStore) doCleanUpInReguarInterval(timeToLive time.Duration) 
 	}
 	for {
 		dms.cleanupStaleValues(timeToLive)
-		timer1 := time.NewTimer(60 * time.Second)
+		timer1 := time.NewTimer(timeToLive)
 		<-timer1.C
 	}
 }
