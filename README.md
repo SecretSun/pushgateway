@@ -10,6 +10,24 @@ exist long enough to be scraped, they can instead push their metrics
 to a Pushgateway. The Pushgateway then exposes these metrics to
 Prometheus.
 
+## Modify
+Base on [dinumathai/pushgateway](https://github.com/dinumathai/pushgateway) &  [pushgateway v1.4.3](https://github.com/prometheus/pushgateway/tree/v1.4.3) TTL logical merge
+see details [compare](https://github.com/prometheus/pushgateway/compare/master...dinumathai:master)
+```
+main.go: 74 & 102
+storage/diskmetricstore.go: 85 & 107 & 461 & 472
+Complete unit tests
+```
+
+## Consistency
+
+Envoy + Headless Service Svc + MAGLEV
+在 K8s 中有一种称为 Headless Service 的特定服务，恰好与 Envoy 的 STRICT_DNS 服务发现模式一起使用非常方便。(
+In K8s there is a specific service called Headless Service which happens to be very handy to use with Envoy's STRICT_DNS service discovery mode.)
+Headless Service 不提供单个 IP 和负载平衡到底层 pod，而是它只有 DNS 配置，它为我们提供 A 记录，其中包含与标签选择器匹配的所有 pod 的 pod 的 IP 地址。(Instead of providing a single IP and load balancing to the underlying pods, the Headless Service has only a DNS configuration which gives us A records containing the IP addresses of all pods that match the label selector.)
+此服务类型旨在用于我们希望实现负载平衡以及自己维护与上游 pod 的连接的场景，这正是我们可以使用 Envoy 执行的操作。(This service type is intended for use in scenarios where we want to load balance and maintain connections to upstream pods ourselves, which is exactly what we can do with Envoy.)
+📢 需要注意，此方案依然存在少量数据重复问题，需要在查询时过滤。（It should be noted that this solution still has a small amount of data duplication problem, which needs to be filtered during query.）
+
 ## Non-goals
 
 First of all, the Pushgateway is not capable of turning Prometheus into a
@@ -626,19 +644,3 @@ Environments](http://peter.bourgon.org/go-in-production/#formatting-and-style).
 [hub]: https://hub.docker.com/r/prom/pushgateway/
 [circleci]: https://circleci.com/gh/prometheus/pushgateway
 [quay]: https://quay.io/repository/prometheus/pushgateway
-
-## 修改了 Or 增加
-基于 [dinumathai/pushgateway](https://github.com/dinumathai/pushgateway) &  [官方 pushgateway v1.4.3](https://github.com/prometheus/pushgateway/tree/v1.4.3) TTL 逻辑合并
-详细见 [compare](https://github.com/prometheus/pushgateway/compare/master...dinumathai:master)
-```
-main.go: 74 & 102
-storage/diskmetricstore.go: 85 & 107 & 461 & 472
-补齐单元测试
-```
-
-## 一致性
-
-Envoy + Headless Service Svc + MAGLEV
-在 K8s 中有一种称为 Headless Service 的特定服务，恰好与 Envoy 的 STRICT_DNS 服务发现模式一起使用非常方便。
-Headless Service 不提供单个 IP 和负载平衡到底层 pod，而是它只有 DNS 配置，它为我们提供 A 记录，其中包含与标签选择器匹配的所有 pod 的 pod 的 IP 地址。
-此服务类型旨在用于我们希望实现负载平衡以及自己维护与上游pod的连接的场景，这正是我们可以使用Envoy执行的操作。
