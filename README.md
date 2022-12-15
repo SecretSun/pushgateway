@@ -24,8 +24,11 @@ Complete unit tests
 Envoy + Headless Service Svc + MAGLEV
 在 K8s 中有一种称为 Headless Service 的特定服务，恰好与 Envoy 的 STRICT_DNS 服务发现模式一起使用非常方便。(
 In K8s there is a specific service called Headless Service which happens to be very handy to use with Envoy's STRICT_DNS service discovery mode.)
+
 Headless Service 不提供单个 IP 和负载平衡到底层 pod，而是它只有 DNS 配置，它为我们提供 A 记录，其中包含与标签选择器匹配的所有 pod 的 pod 的 IP 地址。(Instead of providing a single IP and load balancing to the underlying pods, the Headless Service has only a DNS configuration which gives us A records containing the IP addresses of all pods that match the label selector.)
+
 此服务类型旨在用于我们希望实现负载平衡以及自己维护与上游 pod 的连接的场景，这正是我们可以使用 Envoy 执行的操作。(This service type is intended for use in scenarios where we want to load balance and maintain connections to upstream pods ourselves, which is exactly what we can do with Envoy.)
+
 📢 需要注意，此方案依然存在少量数据重复问题，需要在查询时过滤。（It should be noted that this solution still has a small amount of data duplication problem, which needs to be filtered during query.）
 
 ## Non-goals
